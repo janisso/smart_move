@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "ofxOsc.h"
 #include "attitude_estimator.h"
-#include "OSCreceiveThread.h"
+#include "kickClass.h"
 
 // listen on port 12345
 #define PORT 54321
@@ -56,6 +56,7 @@ class ofApp : public ofBaseApp{
     float scaledVol;
     
     ofBoxPrimitive box;
+    ofSpherePrimitive sphere;
     float pitch, roll;
     
     stateestimation::AttitudeEstimator Est;
@@ -64,13 +65,11 @@ class ofApp : public ofBaseApp{
     //double aQ[4];
     double q[4], l_q[4], dq[4];
     
-    ofFile sensorData;
+    ofFile sensorData, quaternionData;
     ofFile beatData;
     
     ofxOscSender sender;
     
-    bool record;
-    bool firstFrame;
-    OSCreceiveThread oscThread;
+    kickClass kicker;
 		
 };

@@ -32,6 +32,9 @@ void ofApp::setup(){
     box.setSideColor(box.SIDE_BOTTOM, ofColor::maroon);
     pitch = 0;  roll = 0;
     
+    sphere.set( 50, 60, OF_PRIMITIVE_TRIANGLE_STRIP );
+    //sphere.setColor(0,255,0);
+    
     t = 0;
     l_t = 0;
     dt = 0.0;
@@ -63,6 +66,9 @@ void ofApp::setup(){
     
     
     sensorData.open("sensor_data.csv",ofFile::WriteOnly);
+    quaternionData.open("quaternion_data.csv",ofFile::WriteOnly);
+    
+    kicker.setup();
 }
 
 //--------------------------------------------------------------
@@ -140,9 +146,19 @@ void ofApp::update(){
         magHistory.erase(magHistory.begin(), magHistory.begin()+1);
     }
     t = ofGetElapsedTimef();
+    kicker.update(t,lax,lay,laz);
+    if(kicker.send_kick){
+        ofxOscMessage k;
+        k.setAddress("/k");
+        k.addFloatArg(kicker.kick_intensity);
+        sender.sendMessage(k, false);
+        kicker.send_kick = false;
+    }
     //string s(t.str());
     sensorData << to_string(t) << ", " << to_string(ax) << ", " << to_string(ay) <<  ", " << to_string(az) << ", " << to_string(gx) << ", " << to_string(gy) << ", " << to_string(gz) << ", " << to_string(mx) << ", " << to_string(my) << ", " <<  to_string(mz) << endl;
+    quaternionData << to_string(t) << ", " << to_string(q[0]) << ", " << to_string(q[1]) << ", " << to_string(q[2]) << ", " << to_string(q[3]) << endl;
     dt = t-l_t;
+    kicker.update(t,lax,lay,laz);
     l_t = t;
     //cout << dt <<endl;
     
@@ -150,7 +166,7 @@ void ofApp::update(){
     
     
     
-    cout << dt << " " << d_ts << endl;
+    //cout << dt << " " << d_ts << endl;
     l_ts = ts;
     Est.update(dt, gx, gy, gz, ax, ay, az, mx, my, mz);
     //Est.update(dt, lgx, lgy, lgz, lax, lay, laz, lmx, lmy, lmz);
@@ -160,6 +176,7 @@ void ofApp::update(){
         aQ[i]=q[i];
     }*/
     //cout << "My attitude is (quaternion): (" << q[0] << "," << q[1] << "," << q[2] << "," << q[3] << ")" << endl;
+    //cout <<  << endl;
     //cout << "My attitude is (ZYX Euler): (" << Est.eulerYaw() << "," << Est.eulerPitch() << "," << Est.eulerRoll() << ")" << endl;
     //cout << "My attitude is (fused): (" << Est.fusedYaw() << "," << Est.fusedPitch() << "," << Est.fusedRoll() << "," << (Est.fusedHemi() ? 1 : -1) << ")" << endl;
     ofxOscMessage a;
@@ -208,6 +225,7 @@ void ofApp::draw(){
     //puts center of everything to center of screen
     //ofPushMatrix();
     ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5, ofGetWidth()*.5);
+    sphere.setPosition(200, 0, 0);
     //cout << q[0] << q[1] << q[2] << q[3] << endl;
     //
     //ofVec3f axis;
@@ -218,7 +236,6 @@ void ofApp::draw(){
     for(int i =0; i< 4; i++){
         l_q[i]=q[i];
     }
-    
     
     //cout << "My attitude is (quaternion): (" << q[0] << "," << q[1] << "," << q[2] << "," << q[3] << ")" << endl;
     //ofSetOrientation(curRot);
@@ -240,11 +257,43 @@ void ofApp::draw(){
     //ofQuaternion curRot(aQ[3],aQ[0],aQ[1],aQ[2]);
     //vector<ofMeshFace> triangles = box.getMesh().getUniqueFaces();
     box.setOrientation(curRot);
+    //sphere.setOrientation(curRot);
     //ofDrawAxis(400);
     ofPushMatrix();
     ofRotateY(90);
     box.draw();
+    
+    
+    
+    float theta = 4*M_PI-2*acos(q[3]);
+    float x = q[0]*(1.0/sin(theta/2));
+    float y = q[1]*(1.0/sin(theta/2));
+    float z = q[2]*(1.0/sin(theta/2));
+    
+    cout << asin(z)*180 << endl;
+    
+    ofRotateZ(Est.fusedRoll()*(360/(M_PI*2)));
+    ofRotateY(Est.fusedYaw()*(360/(M_PI*2)));
+    ofRotateX(-Est.fusedPitch()*(360/(M_PI*2)));
+    //ofRotateY(Est.fusedYaw()*(360/(M_PI*2)));
+    //ofTranslate(0,200,0);
+    //ofTranslate(0,0,z*200);//,z*200);
+    //ofRotateY();
+    sphere.draw();
     ofPopMatrix();
+    
+    
+    //cout <<  << endl;
+    /*ofPushMatrix();
+    ofTranslate(200, 200);
+    
+    float theta = acos(q[3])*2;
+    //float rotY = asin(q[1])*2;
+    
+    ofRotateY(theta*180);
+    cout << Est.fusedYaw()*(360/(M_PI*2)) << endl;
+    ofDrawAxis(200);
+    ofPopMatrix();*/
     //ofDisableDepthTest();
     //ofPopMatrix();
     

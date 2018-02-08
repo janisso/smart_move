@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>A8CF850C-E9CA-4C85-8528-827B1EA659B7</string>
+	<key>IDESourceControlProjectName</key>
+	<string>receiveSensors</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>2A8F1911D9D012EBCB963443433DFF05BF6956B0</key>
+		<string>https://github.com/janisso/smart_move.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>receiveSensors.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>2A8F1911D9D012EBCB963443433DFF05BF6956B0</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/janisso/smart_move.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>2A8F1911D9D012EBCB963443433DFF05BF6956B0</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>2A8F1911D9D012EBCB963443433DFF05BF6956B0</string>
+			<key>IDESourceControlWCCName</key>
+			<string>receiveSensors</string>
+		</dict>
+	</array>
+</dict>
+</plist>
