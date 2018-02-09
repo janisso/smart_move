@@ -16,6 +16,8 @@ class ofApp : public ofBaseApp{
 		void setup();
 		void update();
 		void draw();
+        ofVec3f normalize3(ofVec3f quat3_);
+        double getLength(ofVec3f quat3_);
 
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -55,18 +57,23 @@ class ofApp : public ofBaseApp{
     float smoothedVol;
     float scaledVol;
     
-    ofBoxPrimitive box;
+    ofBoxPrimitive box,box1,box2;
     ofSpherePrimitive sphere;
     float pitch, roll;
     
+    ofQuaternion slerpRot;
+    
     stateestimation::AttitudeEstimator Est;
     
-    //ofQuaternion curRot;
+    ofQuaternion curRot;
     //double aQ[4];
+    ofVec3f quat3, normQuat;
     double q[4], l_q[4], dq[4];
     
     ofFile sensorData, quaternionData;
     ofFile beatData;
+    
+    int sendNote;
     
     ofxOscSender sender;
     

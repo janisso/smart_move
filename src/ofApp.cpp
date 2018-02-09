@@ -24,6 +24,8 @@ void ofApp::setup(){
     
     float width = ofGetWidth() * .12;
     box.set(400, 20, 200);
+    box1.set(400, 2, 2);
+    box2.set(400, 2, 2);
     box.setSideColor(box.SIDE_BACK, ofColor::red);
     box.setSideColor(box.SIDE_LEFT, ofColor::black);
     box.setSideColor(box.SIDE_RIGHT, ofColor::blue);
@@ -32,7 +34,7 @@ void ofApp::setup(){
     box.setSideColor(box.SIDE_BOTTOM, ofColor::maroon);
     pitch = 0;  roll = 0;
     
-    sphere.set( 50, 60, OF_PRIMITIVE_TRIANGLE_STRIP );
+    sphere.set(200, 20, OF_PRIMITIVE_TRIANGLE_STRIP );
     //sphere.setColor(0,255,0);
     
     t = 0;
@@ -64,11 +66,28 @@ void ofApp::setup(){
     }
     //q[4] = {0,0,0,0};
     
+    normQuat.x = 1.f;
+    normQuat.y = 0.f;
+    normQuat.x = 0.f;
+    
+    //quat3.x = 1.f;
+    //quat3.y = 0.f;
+    //quat3.x = 0.f;
     
     sensorData.open("sensor_data.csv",ofFile::WriteOnly);
     quaternionData.open("quaternion_data.csv",ofFile::WriteOnly);
-    
+    sendNote = 0;
     kicker.setup();
+}
+
+double ofApp::getLength(ofVec3f quat3_){
+    return sqrt(quat3_.x*quat3_.x + quat3_.y*quat3_.y + quat3_.z*quat3_.z);
+}
+
+ofVec3f ofApp::normalize3(ofVec3f quat3_){
+    double length = getLength(quat3_);
+    ofVec3f quatNorm_ = ofVec3f(quat3_.x/length, quat3_.y/length, quat3_.z/length);
+    return quatNorm_;
 }
 
 //--------------------------------------------------------------
@@ -146,19 +165,12 @@ void ofApp::update(){
         magHistory.erase(magHistory.begin(), magHistory.begin()+1);
     }
     t = ofGetElapsedTimef();
-    kicker.update(t,lax,lay,laz);
-    if(kicker.send_kick){
-        ofxOscMessage k;
-        k.setAddress("/k");
-        k.addFloatArg(kicker.kick_intensity);
-        sender.sendMessage(k, false);
-        kicker.send_kick = false;
-    }
+
     //string s(t.str());
     sensorData << to_string(t) << ", " << to_string(ax) << ", " << to_string(ay) <<  ", " << to_string(az) << ", " << to_string(gx) << ", " << to_string(gy) << ", " << to_string(gz) << ", " << to_string(mx) << ", " << to_string(my) << ", " <<  to_string(mz) << endl;
     quaternionData << to_string(t) << ", " << to_string(q[0]) << ", " << to_string(q[1]) << ", " << to_string(q[2]) << ", " << to_string(q[3]) << endl;
     dt = t-l_t;
-    kicker.update(t,lax,lay,laz);
+    //kicker.update(t,lax,lay,laz);
     l_t = t;
     //cout << dt <<endl;
     
@@ -172,6 +184,39 @@ void ofApp::update(){
     //Est.update(dt, lgx, lgy, lgz, lax, lay, laz, lmx, lmy, lmz);
     //double q[4];
     Est.getAttitude(q);
+    
+    curRot.set(q[3],q[2],q[0],q[1]);
+    
+    kicker.update(t,lax,lay,laz,-(fmod((curRot.getEuler().y+360),360)));
+    if(kicker.send_kick){
+        ofxOscMessage k;
+        k.setAddress("/k");
+        //int(azimuth/22.5)
+        
+        sendNote = int(kicker.azimuth/45)+7;
+        /*if(sendNote<0){
+            sendNote=0;
+        }
+        if(sendNote>7){
+            sendNote = 7;
+        }*/
+        
+        k.addIntArg(sendNote);
+        k.addFloatArg(kicker.kick_intensity);
+        sender.sendMessage(k, false);
+        kicker.send_kick = false;
+    }
+    
+    
+    /*quat3 = ofVec3f(q[1],q[2],q[3]);
+    normQuat = normalize3(quat3);
+    
+    float r = getLength(normQuat);
+    float theta = atan2(sqrt(pow(normQuat.x,2)+pow(normQuat.y,2)),normQuat.z);
+    float phi = atan2(normQuat.z,normQuat.y);*/
+    
+    //printf("(3D) Spherical coordinates: (%f,%f,%f)\n",r,theta,phi);
+    
     /*for (int i = 0; i < 4; i++){
         aQ[i]=q[i];
     }*/
@@ -225,7 +270,10 @@ void ofApp::draw(){
     //puts center of everything to center of screen
     //ofPushMatrix();
     ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5, ofGetWidth()*.5);
-    sphere.setPosition(200, 0, 0);
+    sphere.setPosition(0, 100, 0);
+    box.setPosition(0,100,0);
+    //box1.setPosition(0, 100, 0);
+    //box2.setPosition(0, 100, 0);
     //cout << q[0] << q[1] << q[2] << q[3] << endl;
     //
     //ofVec3f axis;
@@ -252,34 +300,80 @@ void ofApp::draw(){
     
     ofNoFill();
     //ofQuaternion curRot(q[3],q[2],q[0],q[1]);
+    /////the one that works
     
-    ofQuaternion curRot(q[3],q[2],q[0],q[1]);
+    
+    
+    //ofQuaternion curRot(q[1],q[2],q[3],q[0]);
     //ofQuaternion curRot(aQ[3],aQ[0],aQ[1],aQ[2]);
     //vector<ofMeshFace> triangles = box.getMesh().getUniqueFaces();
     box.setOrientation(curRot);
-    //sphere.setOrientation(curRot);
+    box1.setOrientation(ofQuaternion(0,0,1,0));//sphere.setOrientation(curRot);
+    
+
+    
     //ofDrawAxis(400);
     ofPushMatrix();
     ofRotateY(90);
     box.draw();
+    ofPopMatrix();
+    
+    /*ofRotateY(-90);
+    for (int i =0; i < 10; i++){
+        float t = i*0.1;
+        slerpRot.slerp(t,box.getOrientationQuat(),ofQuaternion(0,0,1,0));
+        //box1.setOrientation(slerpRot);
+        ofPushMatrix();
+        ofTranslate(0,100,0);
+        ofRotateY(slerpRot.getEuler().y);
+        //ofRotateZ(slerpRot.getEuler().z);
+        box1.draw();
+        ofPopMatrix();
+    }
+    
+    for (int i =0; i < 10; i++){
+        float t = i*0.1;
+        ofQuaternion slerpRot1;
+        slerpRot1.slerp(t,box.getOrientationQuat(),ofQuaternion(0,0,1,0));
+        //box1.setOrientation(slerpRot);
+        ofPushMatrix();
+        ofTranslate(0,100,0);
+        ofRotateY(curRot.getEuler().y);
+        ofRotateZ(-slerpRot1.getEuler().z);
+        //ofRotateZ(slerpRot.getEuler().z);
+        box2.draw();
+        ofPopMatrix();
+    }
+    //ofSetColor(255,255,255,100);
+    //box1.draw();*/
+    
+    //cout << -(fmod((curRot.getEuler().y+360),360)-180) << endl;
+
+    
+    //cout << box1.getOrientationQuat() << endl;
+    //cout << box.getOrientationQuat() << endl;
+    //cout << slerpRot << endl;
+    //cout << q[0] << ", " << q[1] << ", " << q[2] << ", " << q[3] << endl;
     
     
     
-    float theta = 4*M_PI-2*acos(q[3]);
+    /*float theta = 4*M_PI-2*acos(q[3]);
     float x = q[0]*(1.0/sin(theta/2));
     float y = q[1]*(1.0/sin(theta/2));
-    float z = q[2]*(1.0/sin(theta/2));
+    float z = q[2]*(1.0/sin(theta/2));*/
     
-    cout << asin(z)*180 << endl;
+    //cout << asin(z)*180 << endl;
     
-    ofRotateZ(Est.fusedRoll()*(360/(M_PI*2)));
-    ofRotateY(Est.fusedYaw()*(360/(M_PI*2)));
-    ofRotateX(-Est.fusedPitch()*(360/(M_PI*2)));
+    //ofRotateZ(Est.fusedRoll()*(360/(M_PI*2)));
     //ofRotateY(Est.fusedYaw()*(360/(M_PI*2)));
-    //ofTranslate(0,200,0);
+    //ofRotateX(-Est.fusedPitch()*(360/(M_PI*2)));
+    //ofRotateY(Est.fusedYaw()*(360/(M_PI*2)));
+    //ofTranslate(normQuat.x*200,normQuat.y*200,normQuat.z*200);
+    //ofRotateY(phi*(360/(M_PI*2)));
     //ofTranslate(0,0,z*200);//,z*200);
     //ofRotateY();
-    sphere.draw();
+    //sphere.setOrientation(curRot);
+    sphere.drawWireframe();
     ofPopMatrix();
     
     

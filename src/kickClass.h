@@ -16,7 +16,7 @@
 class kickClass{
 public:
     void setup();
-    void update(double ElapsedTime_, float a_x_, float a_y_, float a_z_);
+    void update(double ElapsedTime_, float a_x_, float a_y_, float a_z_, float azimuth_);
     void kick();
     
     bool send_kick;
@@ -44,6 +44,8 @@ public:
     float acc_intensity_norm_median;// = 0.f;
     unsigned short int LoopIndex;// = 0;
     unsigned short int LoopIndexPeriod;// = lcm(lcm(2, 3), KICK_MEDIAN_FILTERSIZE);
+    
+    float azimuth;
     
 };
 

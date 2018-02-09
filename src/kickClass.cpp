@@ -16,17 +16,19 @@ void kickClass::setup(){
     LoopIndexPeriod = lcm(lcm(2, 3), KICK_MEDIAN_FILTERSIZE);
     a_x = 0;    a_y = 0;    a_z = 0;
     send_kick = false;
+    azimuth = 0;
 }
 
 void kickClass::kick(){
     
 }
 
-void kickClass::update(double ElapsedTime_, float a_x_, float a_y_, float a_z_){
+void kickClass::update(double ElapsedTime_, float a_x_, float a_y_, float a_z_, float azimuth_){
     ElapsedTime = ElapsedTime_;
     a_x = a_x_;
     a_y = a_y_;
     a_z = a_z_;
+    azimuth = azimuth_;
     
     //KICK
     acc_last_three[0][LoopIndex % 3] = a_x;
@@ -89,7 +91,7 @@ void kickClass::update(double ElapsedTime_, float a_x_, float a_y_, float a_z_){
             send_kick = true;
             //cout << "kick " << ElapsedTime << endl;
             kick_intensity = acc_intensity_norm;
-            cout << "kick " << ElapsedTime << endl;
+            //cout << "kick " << ElapsedTime << ", " << acc_intensity_norm << ", " << int(azimuth/22.5) <<  endl;
             
             //
             //kick_intensity = 0.;
