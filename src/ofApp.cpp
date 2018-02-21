@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    //ofSetFrameRate(60);
+    ofSetFrameRate(120);
     //cout << "listening for osc messages on port " << PORT << "\n";
     receiver.setup(PORT);
     sender.setup(HOST, 5555);
@@ -23,9 +23,9 @@ void ofApp::setup(){
     //volHistory.assign(1024-100, 0.0);
     
     float width = ofGetWidth() * .12;
-    box.set(400, 20, 200);
-    box1.set(400, 2, 2);
-    box2.set(400, 2, 2);
+    box.set(200, 400, 20);
+    box1.set(200, 400, 20);
+    //box2.set(400, 2, 2);
     box.setSideColor(box.SIDE_BACK, ofColor::red);
     box.setSideColor(box.SIDE_LEFT, ofColor::black);
     box.setSideColor(box.SIDE_RIGHT, ofColor::blue);
@@ -47,14 +47,14 @@ void ofApp::setup(){
     
     //ESTIMATION SETUP
     // Initialise the estimator (e.g. in the class constructor, none of these are actually strictly required for the estimator to work, and can be set at any time)
-    Est.setMagCalib(1.1, 26.3, -37.2);         // Recommended: Use if you want absolute yaw information as opposed to just relative yaw (Default: (0.68, -1.32, 0.0))
+    Est.setMagCalib(5.3231511254, 19.1682320817, -44.3531841756);         // Recommended: Use if you want absolute yaw information as opposed to just relative yaw (Default: (0.68, -1.32, 0.0))
     /*Est.setPIGains(2.2, 2.65, 10, 1.25);       // Recommended: Use if the default gains (shown) do not provide optimal estimator performance (Note: Ki = Kp/Ti)*/
     Est.setQLTime(3);                        // Optional: Use if the default quick learning time is too fast or too slow for your application (Default: 3.0)
-    /*Est.setAttitude(0.5, 0.5, 0.5, 0.5);       // Optional: Use if you have prior knowledge about the orientation of the robot (Default: Identity orientation)
+    //Est.setAttitude(1, 0, 0, 0);       // Optional: Use if you have prior knowledge about the orientation of the robot (Default: Identity orientation)
     Est.setAttitudeEuler(M_PI, 0.0, 0.0);      // Optional: Use if you have prior knowledge about the orientation of the robot (Default: Identity orientation)
-    Est.setAttitudeFused(M_PI, 0.0, 0.0, 1.0); // Optional: Use if you have prior knowledge about the orientation of the robot (Default: Identity orientation)
-    Est.setGyroBias(0, 0, 0);     // Optional: Use if you have prior knowledge about the gyroscope bias (Default: (0.0, 0.0, 0.0))
-    Est.setAccMethod(Est.ME_FUSED_YAW);        // Optional: Use if you wish to experiment with varying acc-only resolution methods*/
+    //Est.setAttitudeFused(M_PI, 0.0, 0.0, 1.0); // Optional: Use if you have prior knowledge about the orientation of the robot (Default: Identity orientation)
+    //Est.setGyroBias(0, 0, 0);     // Optional: Use if you have prior knowledge about the gyroscope bias (Default: (0.0, 0.0, 0.0))
+    //Est.setAccMethod(Est.ME_FUSED_YAW);        // Optional: Use if you wish to experiment with varying acc-only resolution methods*/
     void ofResetElapsedTimeCounter();
     
     
@@ -62,6 +62,7 @@ void ofApp::setup(){
         q[i]=0;
         dq[i]=0;
         l_q[i]=0;
+        qRef[i]=0;
         //aQ[0]=0;
     }
     //q[4] = {0,0,0,0};
@@ -76,6 +77,7 @@ void ofApp::setup(){
     
     sensorData.open("sensor_data.csv",ofFile::WriteOnly);
     quaternionData.open("quaternion_data.csv",ofFile::WriteOnly);
+    rotMatrix.open("rotmat_data.csv",ofFile::WriteOnly);
     sendNote = 0;
     kicker.setup();
 }
@@ -122,6 +124,16 @@ void ofApp::update(){
             mz = m.getArgAsFloat(9);
         }
         
+        if(m.getAddress() == "/l"){
+            int oscL = m.getArgAsInt(0);
+            cout << "learn " << oscL << endl;
+            
+            ofxOscMessage l;
+            l.setAddress("/l");
+            l.addIntArg(oscL);
+            sender.sendMessage(l, false);
+        }
+        
         /*if(m.getAddress() == "/q"){
 
             aQ[0] = m.getArgAsFloat(0);
@@ -130,6 +142,8 @@ void ofApp::update(){
             aQ[3] = m.getArgAsFloat(3);
         }*/
     }
+    
+    //cout << "yo " << endl;
     
 
     
@@ -167,8 +181,7 @@ void ofApp::update(){
     t = ofGetElapsedTimef();
 
     //string s(t.str());
-    sensorData << to_string(t) << ", " << to_string(ax) << ", " << to_string(ay) <<  ", " << to_string(az) << ", " << to_string(gx) << ", " << to_string(gy) << ", " << to_string(gz) << ", " << to_string(mx) << ", " << to_string(my) << ", " <<  to_string(mz) << endl;
-    quaternionData << to_string(t) << ", " << to_string(q[0]) << ", " << to_string(q[1]) << ", " << to_string(q[2]) << ", " << to_string(q[3]) << endl;
+
     dt = t-l_t;
     //kicker.update(t,lax,lay,laz);
     l_t = t;
@@ -181,28 +194,53 @@ void ofApp::update(){
     //cout << dt << " " << d_ts << endl;
     l_ts = ts;
     Est.update(dt, gx, gy, gz, ax, ay, az, mx, my, mz);
+    
+    double length = sqrt(pow(ax,2)+pow(ay,2)+pow(az,2));
+    double axn = ax/length;
+    double ayn = ay/length;
+    double azn = az/length;
+    
+    cout << axn + ayn + azn << endl;
+    
+    //CF.getOrientation(qRef[0],qRef[1],qRef[2],qRef[3]);
+    cfRot.set(qRef[0],qRef[1],qRef[2],qRef[3]);
+    
+    
     //Est.update(dt, lgx, lgy, lgz, lax, lay, laz, lmx, lmy, lmz);
     //double q[4];
     Est.getAttitude(q);
     
-    curRot.set(q[3],q[2],q[0],q[1]);
+    curRot.set(q[1],q[2],q[3],q[0]);
+    //curRot.set(q[0],q[1],q[2],q[3]);
     
-    kicker.update(t,lax,lay,laz,-(fmod((curRot.getEuler().y+360),360)));
+    kicker.update(t,lax,lay,laz,-(fmod((curRot.getEuler().z+360),360)));
+    
+    double * rotMat = Est.getRot();
+    //cout << qRef[0] << ", " << qRef[0] << endl;
+    
+    
+    
+    sensorData << to_string(t) << ", " << to_string(ax) << ", " << to_string(ay) <<  ", " << to_string(az) << ", " << to_string(gx) << ", " << to_string(gy) << ", " << to_string(gz) << ", " << to_string(mx) << ", " << to_string(my) << ", " <<  to_string(mz) << endl;
+    quaternionData << to_string(t) << ", " << to_string(q[0]) << ", " << to_string(q[1]) << ", " << to_string(q[2]) << ", " << to_string(q[3]) << endl;
+    rotMatrix << to_string(t) << ", " << to_string(rotMat[0]) << ", " << to_string(rotMat[1]) << ", " << to_string(rotMat[2]) << ", " << to_string(rotMat[3]) <<", " << to_string(rotMat[4])<< ", " << to_string(rotMat[5]) << ", " << to_string(rotMat[6]) << ", " << to_string(rotMat[7]) << ", " << to_string(rotMat[8]) << endl;
+    
+    
+    if(kicker.new_kick){
+        ofxOscMessage nk;
+        nk.setAddress("/nk");
+        //int(azimuth/22.5)
+        nk.addIntArg(1);
+        sender.sendMessage(nk, false);
+        kicker.new_kick = false;
+    }
     if(kicker.send_kick){
         ofxOscMessage k;
         k.setAddress("/k");
         //int(azimuth/22.5)
         
         sendNote = int(kicker.azimuth/45)+7;
-        /*if(sendNote<0){
-            sendNote=0;
-        }
-        if(sendNote>7){
-            sendNote = 7;
-        }*/
-        
         k.addIntArg(sendNote);
-        k.addFloatArg(kicker.kick_intensity);
+        k.addFloatArg(kicker.kick_vel_send);
         sender.sendMessage(k, false);
         kicker.send_kick = false;
     }
@@ -271,8 +309,8 @@ void ofApp::draw(){
     //ofPushMatrix();
     ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5, ofGetWidth()*.5);
     sphere.setPosition(0, 100, 0);
-    box.setPosition(0,100,0);
-    //box1.setPosition(0, 100, 0);
+    box.setPosition(0,0,-100);
+    box1.setPosition(0, 100, 0);
     //box2.setPosition(0, 100, 0);
     //cout << q[0] << q[1] << q[2] << q[3] << endl;
     //
@@ -308,14 +346,16 @@ void ofApp::draw(){
     //ofQuaternion curRot(aQ[3],aQ[0],aQ[1],aQ[2]);
     //vector<ofMeshFace> triangles = box.getMesh().getUniqueFaces();
     box.setOrientation(curRot);
-    box1.setOrientation(ofQuaternion(0,0,1,0));//sphere.setOrientation(curRot);
+    box1.setOrientation(cfRot);//sphere.setOrientation(curRot);
     
 
     
     //ofDrawAxis(400);
     ofPushMatrix();
-    ofRotateY(90);
+    //ofRotateX(90);
+    //ofRotateY(180);
     box.draw();
+    box1.draw();
     ofPopMatrix();
     
     /*ofRotateY(-90);
@@ -446,6 +486,8 @@ void ofApp::displayGraph(vector <ofVec3f> _history, int _mult){
         ofVertex(i, _history[i].z * _mult);
     }
     ofEndShape(false);
+    
+    ofDrawLine(0,0,ofGetHeight()-100,0);
 }
 
 //--------------------------------------------------------------

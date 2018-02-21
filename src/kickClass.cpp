@@ -15,7 +15,11 @@ void kickClass::setup(){
     LoopIndex = 0;
     LoopIndexPeriod = lcm(lcm(2, 3), KICK_MEDIAN_FILTERSIZE);
     a_x = 0;    a_y = 0;    a_z = 0;
+    is_kick = false;
     send_kick = false;
+    new_kick = false;
+    kick_vel_send = 0;
+    kick_count = 0;
     azimuth = 0;
 }
 
@@ -24,6 +28,7 @@ void kickClass::kick(){
 }
 
 void kickClass::update(double ElapsedTime_, float a_x_, float a_y_, float a_z_, float azimuth_){
+    //cout << a_x << endl;
     ElapsedTime = ElapsedTime_;
     a_x = a_x_;
     a_y = a_y_;
@@ -84,13 +89,15 @@ void kickClass::update(double ElapsedTime_, float a_x_, float a_y_, float a_z_, 
         if (isKicking == true){ //Still kicking
             if (kick_intensity < acc_intensity_norm){
                 kick_intensity = acc_intensity_norm;
+                cout << "kick intensity " << kick_intensity << endl;
             }
         }
         else {//New kick detected
             isKicking = true;
-            send_kick = true;
-            //cout << "kick " << ElapsedTime << endl;
+            is_kick = true;
+            new_kick = true;
             kick_intensity = acc_intensity_norm;
+            //cout << "kick " << ElapsedTime << endl;
             //cout << "kick " << ElapsedTime << ", " << acc_intensity_norm << ", " << int(azimuth/22.5) <<  endl;
             
             //
@@ -107,7 +114,31 @@ void kickClass::update(double ElapsedTime_, float a_x_, float a_y_, float a_z_, 
         //Set isKicking to 0 only after the speedgate duration
         if (ElapsedTime - LastKick > KICK_SPEEDGATE){
             isKicking = false;
+            //send_kick = false;
         }
+    }
+    
+    if (is_kick == true){// & kick_count<5){
+        kick_vel[kick_count]=acc_intensity_norm;
+        kick_count+=1;
+    }
+    
+    //cout << send_kick << endl;
+    
+    if (kick_count >= 10){
+        //cout << *std::max_element(kick_count,kick_count+5) << endl; //)kick_vel << endl;
+        // Loop to store largest number to arr[0]
+        for(int i = 1;i < 10; ++i)
+        {
+            // Change < to > if you want to find the smallest element
+            if(kick_vel[0] < kick_vel[i])
+                kick_vel[0] = kick_vel[i];
+        }
+        cout << "kick_send      " << kick_vel[0] << endl;
+        kick_vel_send = kick_vel[0];
+        kick_count = 0;
+        is_kick = false;
+        send_kick = true;
     }
     
     acc_intensity_norm_median = median_values[KICK_MEDIAN_FILTERSIZE/2]; //KICK_MEDIAN_FILTERSIZE should be odd

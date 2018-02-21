@@ -173,6 +173,10 @@ namespace stateestimation
 		double fusedRoll()  { if(!m_fusedValid) { updateFused(); } return m_Fhat[2];  } //!< @brief Returns the fused roll of the current attitude estimate (3rd of the fused angles).
 		bool   fusedHemi()  { if(!m_fusedValid) { updateFused(); } return m_FhatHemi; } //!< @brief Returns the hemisphere of the current attitude estimate (boolean 4th parameter of the fused angles representation, where `true` implies `1` and `false` implies `-1`).
 
+        double * getRot() {return m_Ry;}
+        
+        
+        
 		// Get/set functions for the gyroscope bias
 		void getGyroBias(double b[]) const { for(int i = 0;i < 3;i++) b[i] = m_bhat[i]; } //!< @brief Returns the current estimated gyro bias (Note: `b[]` must have room for 3 elements).
 		void setGyroBias(const double b[]) { for(int i = 0;i < 3;i++) m_bhat[i] = b[i]; } //!< @brief Resets the current estimated gyro bias to a particular vector value (Note: `b[]` must have 3 elements).

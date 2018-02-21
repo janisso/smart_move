@@ -39,8 +39,8 @@ class ofApp : public ofBaseApp{
     string msg_strings[NUM_MSG_STRINGS];
     float timers[NUM_MSG_STRINGS];
     
-    float ax,ay,az,gx,gy,gz,mx,my,mz;
-    float lax,lay,laz,lgx,lgy,lgz,lmx,lmy,lmz;
+    double ax,ay,az,gx,gy,gz,mx,my,mz;
+    double lax,lay,laz,lgx,lgy,lgz,lmx,lmy,lmz;
     //string t;
     //long t, l_t;
     float t, l_t, dt, d_ts;
@@ -65,12 +65,12 @@ class ofApp : public ofBaseApp{
     
     stateestimation::AttitudeEstimator Est;
     
-    ofQuaternion curRot;
+    ofQuaternion curRot, cfRot;
     //double aQ[4];
     ofVec3f quat3, normQuat;
-    double q[4], l_q[4], dq[4];
+    double q[4], l_q[4], dq[4], qRef[4];
     
-    ofFile sensorData, quaternionData;
+    ofFile sensorData, quaternionData, rotMatrix;
     ofFile beatData;
     
     int sendNote;
@@ -78,5 +78,7 @@ class ofApp : public ofBaseApp{
     ofxOscSender sender;
     
     kickClass kicker;
+    
+    double * rotMat;
 		
 };

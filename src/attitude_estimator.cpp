@@ -748,7 +748,7 @@ void AttitudeEstimator::updateQy(double accX, double accY, double accZ, double m
 				// Note: The calculated nxG and nyG should theoretically be identical.
 				nxG = m_Ry[0]*m_Ry[0] + m_Ry[1]*m_Ry[1] + m_Ry[2]*m_Ry[2]; // = ||xG||^2
 				nyG = m_Ry[3]*m_Ry[3] + m_Ry[4]*m_Ry[4] + m_Ry[5]*m_Ry[5]; // = ||yG||^2
-
+ 
 				// Check whether the basis vector generation was successful (non-zero xG/yG)
 				// Note: We check both nxG and nyG, even though to machine precision we should have nxG == nyG.
 				if((nxG < XGYG_NORM_TOL_SQ) || (nyG < XGYG_NORM_TOL_SQ))

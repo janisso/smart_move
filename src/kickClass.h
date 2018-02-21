@@ -19,7 +19,8 @@ public:
     void update(double ElapsedTime_, float a_x_, float a_y_, float a_z_, float azimuth_);
     void kick();
     
-    bool send_kick;
+    float kick_vel_send;
+    bool is_kick, send_kick, new_kick;
     double ElapsedTime;
     float a_x, a_y, a_z;
     
@@ -46,6 +47,8 @@ public:
     unsigned short int LoopIndexPeriod;// = lcm(lcm(2, 3), KICK_MEDIAN_FILTERSIZE);
     
     float azimuth;
+    float kick_vel[10] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
+    int kick_count;
     
 };
 

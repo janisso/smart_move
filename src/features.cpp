@@ -19,4 +19,3 @@ int lcm(int a, int b){
   }
   return a1;
 }
-
