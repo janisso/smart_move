@@ -15,7 +15,7 @@ void ofApp::setup(){
     
     lax = 0; lay = 0; laz = 0;
     
-    for (int i = 0; i < 924; i++){
+    for (int i = 0; i < 1024; i++){
         accHistory.push_back(ofVec3f(0.0,0.0,0.0));
         gyrHistory.push_back(ofVec3f(0.0,0.0,0.0));
         magHistory.push_back(ofVec3f(0.0,0.0,0.0));
@@ -23,7 +23,7 @@ void ofApp::setup(){
     //volHistory.assign(1024-100, 0.0);
     
     float width = ofGetWidth() * .12;
-    box.set(200, 400, 20);
+    box.set(400, 20, 200);
     box1.set(200, 400, 20);
     //box2.set(400, 2, 2);
     box.setSideColor(box.SIDE_BACK, ofColor::red);
@@ -173,7 +173,7 @@ void ofApp::update(){
     magHistory.push_back(ofVec3f(lmx, lmy, lmz));
     
     //if we are bigger the the size we want to record - lets drop the oldest value
-    if( accHistory.size() >= 924 ){
+    if( accHistory.size() >= 768 ){
         accHistory.erase(accHistory.begin(), accHistory.begin()+1);
         gyrHistory.erase(gyrHistory.begin(), gyrHistory.begin()+1);
         magHistory.erase(magHistory.begin(), magHistory.begin()+1);
@@ -203,17 +203,18 @@ void ofApp::update(){
     cout << axn + ayn + azn << endl;
     
     //CF.getOrientation(qRef[0],qRef[1],qRef[2],qRef[3]);
-    cfRot.set(qRef[0],qRef[1],qRef[2],qRef[3]);
+    //cfRot.set(qRef[0],qRef[1],qRef[2],qRef[3]);
     
     
     //Est.update(dt, lgx, lgy, lgz, lax, lay, laz, lmx, lmy, lmz);
     //double q[4];
     Est.getAttitude(q);
     
-    curRot.set(q[1],q[2],q[3],q[0]);
+    //curRot.set(q[1],q[2],q[3],q[0]);
+    curRot.set(q[3],q[2],q[0],q[1]);
     //curRot.set(q[0],q[1],q[2],q[3]);
     
-    kicker.update(t,lax,lay,laz,-(fmod((curRot.getEuler().z+360),360)));
+    kicker.update(t,lax,lay,laz,-(fmod((curRot.getEuler().y+360),360)));
     
     double * rotMat = Est.getRot();
     //cout << qRef[0] << ", " << qRef[0] << endl;
@@ -309,7 +310,7 @@ void ofApp::draw(){
     //ofPushMatrix();
     ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5, ofGetWidth()*.5);
     sphere.setPosition(0, 100, 0);
-    box.setPosition(0,0,-100);
+    box.setPosition(0,100,0);
     box1.setPosition(0, 100, 0);
     //box2.setPosition(0, 100, 0);
     //cout << q[0] << q[1] << q[2] << q[3] << endl;
@@ -343,20 +344,20 @@ void ofApp::draw(){
     
     
     //ofQuaternion curRot(q[1],q[2],q[3],q[0]);
-    //ofQuaternion curRot(aQ[3],aQ[0],aQ[1],aQ[2]);
+    //ofQuaternion curRot(q[3],q[0],q[1],q[2]);
     //vector<ofMeshFace> triangles = box.getMesh().getUniqueFaces();
-    box.setOrientation(curRot);
-    box1.setOrientation(cfRot);//sphere.setOrientation(curRot);
+    ///////box.setOrientation(curRot);
+    //box1.setOrientation(cfRot);//sphere.setOrientation(curRot);
     
-
     
     //ofDrawAxis(400);
-    ofPushMatrix();
+    /////ofPushMatrix();
     //ofRotateX(90);
     //ofRotateY(180);
-    box.draw();
-    box1.draw();
-    ofPopMatrix();
+    ///////ofRotateY(270);
+    //////box.draw();
+    //box1.draw();
+    //////ofPopMatrix();
     
     /*ofRotateY(-90);
     for (int i =0; i < 10; i++){
@@ -413,8 +414,8 @@ void ofApp::draw(){
     //ofTranslate(0,0,z*200);//,z*200);
     //ofRotateY();
     //sphere.setOrientation(curRot);
-    sphere.drawWireframe();
-    ofPopMatrix();
+    ///////sphere.drawWireframe();
+    //////ofPopMatrix();
     
     
     //cout <<  << endl;
@@ -435,22 +436,22 @@ void ofApp::draw(){
     //ofBox(160,120,10,120);
     //-------ACCELEROMETER DATA-------
     ofPushMatrix();
-    ofTranslate(50-ofGetWidth()*.5, 1440/6-ofGetHeight()*.5, -ofGetWidth()*.5);
-    displayGraph(accHistory, 10);
+    ofTranslate(-ofGetWidth()*.5, 768/6-ofGetHeight()*.5, -ofGetWidth()*.5);
+    displayGraph(accHistory, 3);
     ofPopMatrix();
     
     
     //-------GYRO DATA-------
     ofPushMatrix();
-    ofTranslate(50-ofGetWidth()*.5, 1440/2-ofGetHeight()*.5, -ofGetWidth()*.5);
-    displayGraph(gyrHistory, 10);
+    ofTranslate(-ofGetWidth()*.5, 768/2-ofGetHeight()*.5, -ofGetWidth()*.5);
+    displayGraph(gyrHistory, 3);
     ofPopMatrix();
     
     
     //-------MAG DATA-------
     ofPushMatrix();
-    ofTranslate(50-ofGetWidth()*.5, (1440/6)*5-ofGetHeight()*.5, -ofGetWidth()*.5);
-    displayGraph(magHistory, 2);
+    ofTranslate(-ofGetWidth()*.5, (768/6)*5-ofGetHeight()*.5, -ofGetWidth()*.5);
+    displayGraph(magHistory, 1);
     ofPopMatrix();
     
     //ofRotateX(pitch);
